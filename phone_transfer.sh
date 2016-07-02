@@ -60,6 +60,7 @@ find_path_by_usbid () {
 
 echo "This script will:"
 echo " - move all your photos and videos from phone camera reel to computer"
+echo " - move all your photos and videos from phone gallery albums to computer"
 echo " - move all Smart Tools photos from phone to computer"
 echo " - clear out the following folders on the phone WITHOUT copying them to computer:"
 echo "   - Facebook - Instagram -Tumblr - Screenshot - Downloads - Custom"
@@ -99,20 +100,27 @@ else
     echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
     echo ""
     echo "All Smart Tools images transferred successfully."
-    cd "$SmartToolsPath" || error_exit "Could not change into Smart Tools directory"
-    ls --hide '*.txt' > imagelist.txt || error_exit "Could not build list of images to delete."
-    ImageCount=$(wc -l < "imagelist.txt")
-    if [ $ImageCount -eq 0 ]
-    then
-	echo "There are no images here to delete."
-    else
-	while IFS= read -r filename <&3;
-	do
-	    rm -f "$filename" || error_exit "Could not delete an image file from smart-tools"
-	done 3< imagelist.txt
-	echo "All Smart Tools images deleted from phone"
-    fi
-    rm -f imagelist.txt || error_exit "Could not delete list of images to delete"
+    clear_directory "Smart Tools" "$SmartToolsPath"
+
+    # Transfer photos and videos from album to staging directory and delete them from phone
+    AlbumPath="$DevicePath/Pictures/Plants posted/"
+    echo ""
+    echo "-=-=-=-=-=-=-Starting rsync-=-=-=-=-=-=-=-=-=-=-"
+    rsync -av --progress "$AlbumPath" "$StagingDir" || error_exit "Transfer of Plants posted files unsuccessful."
+    echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
+    echo ""
+    echo "All camera files transferred successfully."
+    clear_directory "Plants posted album" "$AlbumPath"
+
+    # Transfer photos and videos from album to staging directory and delete them from phone
+    PgridPath="$DevicePath/Photo Grid/"
+    echo ""
+    echo "-=-=-=-=-=-=-Starting rsync-=-=-=-=-=-=-=-=-=-=-"
+    rsync -av --progress "$PgridPath" "$StagingDir" || error_exit "Transfer of Photo Grid files unsuccessful."
+    echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
+    echo ""
+    echo "All camera files transferred successfully."
+    clear_directory "Photo Grid" "$PgridPath"
 
     # Clear out other directories
     clear_directory "Facebook" "$DevicePath/DCIM/Facebook"
