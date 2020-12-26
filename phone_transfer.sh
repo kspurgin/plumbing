@@ -1,9 +1,13 @@
 #/bin/bash -ex
 
+# The phone defaults to a charge-only connection.
+# You need to find the connection option on the phone and change it to file transfer
+#  before running this script.
+
 # The ID for the phone might change every time you plug it in. To get the ID, do:
-# $ lsub
+# $ lsusb
 # Look for the info for Motorola PCS
-Id="22b8:2e62"
+Id="22b8:2e82"
 
 StagingDir="/media/Storage/incoming_media/"
 
@@ -20,11 +24,13 @@ error_exit () {
 clear_directory () {
     label=$1
     path=$2
-    echo ""
-    echo "Will delete all contents of phone's $label directory... ($path)"
-    cd "$path" || error_exit "Cannot change into $label directory."
-    rm -f * || error_exit "Could not delete all items from $label directory."
-    echo "All items deleted from $label directory."
+    if [ -d "$2" ]; then
+      echo ""
+      echo "Will delete all contents of phone's $label directory... ($path)"
+      cd "$path" || error_exit "Cannot change into $label directory."
+      rm -f * || error_exit "Could not delete all items from $label directory."
+      echo "All items deleted from $label directory."
+    fi
 }
 
 # Find the path to MTP/PTP connected device by USB ID
@@ -73,60 +79,60 @@ then
     exit
 fi
 
-DevicePath="$(find_path_by_usbid $Id)/Internal storage"
+DevicePath="$(find_path_by_usbid $Id)/Internal shared storage"
 
 echo "\n\nDevice path is: $DevicePath"
 
-# Backup pictures if device is connected
-if [ "$DevicePath" = "Error: File or directory was not found." ]
-then
-        echo "$DevicePath"
-        exit 1
-else
-    # Transfer photos and videos to staging directory and delete them from phone
-    CameraPath="$DevicePath/DCIM/Camera/"
-    echo ""
-    echo "-=-=-=-=-=-=-Starting rsync-=-=-=-=-=-=-=-=-=-=-"
-    rsync -av --progress "$CameraPath" "$StagingDir" || error_exit "Transfer of camera files unsuccessful."
-    echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
-    echo ""
-    echo "All camera files transferred successfully."
-    clear_directory "Camera Roll" "$CameraPath"
+# # Backup pictures if device is connected
+# if [ "$DevicePath" = "Error: File or directory was not found." ]
+# then
+#         echo "$DevicePath"
+#         exit 1
+# else
+#     # Transfer photos and videos to staging directory and delete them from phone
+#     CameraPath="$DevicePath/DCIM/Camera/"
+#     echo ""
+#     echo "-=-=-=-=-=-=-Starting rsync-=-=-=-=-=-=-=-=-=-=-"
+#     rsync -av --progress "$CameraPath" "$StagingDir" || error_exit "Transfer of camera files unsuccessful."
+#     echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
+#     echo ""
+#     echo "All camera files transferred successfully."
+#     clear_directory "Camera Roll" "$CameraPath"
 
-    # Transfer photos from Smart Tools to staging directory and delete them from phone
-    SmartToolsPath="$DevicePath/smart-tools/"
-    echo "-=-=-=-=-=-=-Starting rsync-=-=-=-=-=-=-=-=-=-=-"
-    rsync -av --progress --exclude '*.txt' "$SmartToolsPath" "$StagingDir" || error_exit "Transfer of Smart Tools images unsuccessful."
-    echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
-    echo ""
-    echo "All Smart Tools images transferred successfully."
-    clear_directory "Smart Tools" "$SmartToolsPath"
+#     # Transfer photos from Smart Tools to staging directory and delete them from phone
+#     SmartToolsPath="$DevicePath/smart-tools/"
+#     echo "-=-=-=-=-=-=-Starting rsync-=-=-=-=-=-=-=-=-=-=-"
+#     rsync -av --progress --exclude '*.txt' "$SmartToolsPath" "$StagingDir" || error_exit "Transfer of Smart Tools images unsuccessful."
+#     echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
+#     echo ""
+#     echo "All Smart Tools images transferred successfully."
+#     clear_directory "Smart Tools" "$SmartToolsPath"
 
-    # Transfer photos and videos from album to staging directory and delete them from phone
-    AlbumPath="$DevicePath/Pictures/Plants posted/"
-    echo ""
-    echo "-=-=-=-=-=-=-Starting rsync-=-=-=-=-=-=-=-=-=-=-"
-    rsync -av --progress "$AlbumPath" "$StagingDir" || error_exit "Transfer of Plants posted files unsuccessful."
-    echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
-    echo ""
-    echo "All camera files transferred successfully."
-    clear_directory "Plants posted album" "$AlbumPath"
+#     # Transfer photos and videos from album to staging directory and delete them from phone
+#     # AlbumPath="$DevicePath/Pictures/Plants posted/"
+#     # echo ""
+#     # echo "-=-=-=-=-=-=-Starting rsync-=-=-=-=-=-=-=-=-=-=-"
+#     # rsync -av --progress "$AlbumPath" "$StagingDir" || error_exit "Transfer of Plants posted files unsuccessful."
+#     # echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
+#     # echo ""
+#     # echo "All camera files transferred successfully."
+#     # clear_directory "Plants posted album" "$AlbumPath"
 
-    # Transfer photos and videos from album to staging directory and delete them from phone
-    PgridPath="$DevicePath/Photo Grid/"
-    echo ""
-    echo "-=-=-=-=-=-=-Starting rsync-=-=-=-=-=-=-=-=-=-=-"
-    rsync -av --progress "$PgridPath" "$StagingDir" || error_exit "Transfer of Photo Grid files unsuccessful."
-    echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
-    echo ""
-    echo "All camera files transferred successfully."
-    clear_directory "Photo Grid" "$PgridPath"
+#     # Transfer photos and videos from album to staging directory and delete them from phone
+#     # PgridPath="$DevicePath/Photo Grid/"
+#     # echo ""
+#     # echo "-=-=-=-=-=-=-Starting rsync-=-=-=-=-=-=-=-=-=-=-"
+#     # rsync -av --progress "$PgridPath" "$StagingDir" || error_exit "Transfer of Photo Grid files unsuccessful."
+#     # echo "-=-=-=-=-=-=-rsync complete-=-=-=-=-=-=-=-=-=-=-"
+#     # echo ""
+#     # echo "All camera files transferred successfully."
+#     # clear_directory "Photo Grid" "$PgridPath"
 
-    # Clear out other directories
-    clear_directory "Facebook" "$DevicePath/DCIM/Facebook"
-    clear_directory "Downloads" "$DevicePath/Download"
-    clear_directory "Tumblr" "$DevicePath/Tumblr"
-    clear_directory "Screenshots" "$DevicePath/Pictures/Screenshots"
-    clear_directory "Instagram photos" "$DevicePath/Pictures/Instagram"
+#     # Clear out other directories
+# #    clear_directory "Facebook" "$DevicePath/DCIM/Facebook"
+# #    clear_directory "Downloads" "$DevicePath/Download"
+# #    clear_directory "Tumblr" "$DevicePath/Tumblr"
+# #    clear_directory "Screenshots" "$DevicePath/Pictures/Screenshots"
+#     clear_directory "Instagram photos" "$DevicePath/Pictures/Instagram"
     clear_directory "Instagram videos" "$DevicePath/Movies/Instagram"
 fi
